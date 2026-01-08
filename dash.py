@@ -232,6 +232,10 @@ energia_fora  = df[df["Periodo"] == "Fora de Ponta"]["P_kW"].sum()
 demanda_ponta = df[df["Periodo"] == "Ponta"]["P_kW"].max()
 demanda_fora  = df[df["Periodo"] == "Fora de Ponta"]["P_kW"].max()
 
+#Tarifa Grupo B
+tarifa_kWh = 0.85
+fatura_B = (energia_total * tarifa_kWh)
+
 # Tarifa Verde
 fatura_verde = (
     demanda_max * 24.72 +
@@ -247,10 +251,12 @@ fatura_azul = (
     energia_fora  * 0.28655
 )
 
-colv, cola, colb = st.columns(3)
+colv, cola, colb, cole = st.columns(4)
 
-colv.metric("💚 Tarifa Verde (R$)", f"{fatura_verde:,.2f}")
-cola.metric("💙 Tarifa Azul (R$)", f"{fatura_azul:,.2f}")
+colv.metric("💚 Tarifa Verde -Grupo A (R$)", f"{fatura_verde:,.2f}")
+cola.metric("💙 Tarifa Azul - Grupo A (R$)", f"{fatura_azul:,.2f}")
+colb.metric("Tarifa Convencional - Grupo B (R$)", f"{fatura_B}")
+cole.metricc("Economia - Grupo A x Grupo B (R$)", f"{fatura_verde - fatura_B}")
 
 if fatura_verde < fatura_azul:
     st.success(f"Modalidade recomendada: **HORÁRIA VERDE** – Economia estimada de R$ {(fatura_azul - fatura_verde):,.2f}")
