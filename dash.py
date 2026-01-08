@@ -43,10 +43,14 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.image("TAUREN_LOGO.png", width=150)
+col_logo, col_title = st.columns([1, 5])
 
-st.title("📊 Análise de Demanda e Opção Tarifária – Grupo A (Energisa-PB)")
-st.caption("Dashboard técnico para análise de demanda, energia, fator de potência e opção tarifária")
+with col_logo:
+    st.image("TAUREN_LOGO.png", width=120)
+
+with col_title:
+    st.title("📊 Análise de Demanda e Opção Tarifária – Grupo A")
+    st.caption("Energisa-PB • Engenharia Elétrica • Análise Técnica")
 
 # =========================================================
 # FUNÇÃO DE LEITURA E TRATAMENTO
@@ -156,6 +160,7 @@ demanda_recomendada = demanda_max * 1.10
 # =========================================================
 # KPIs
 # =========================================================
+st.divider()
 col1, col2, col3, col4, col5 = st.columns(5)
 
 col1.metric("⚡ Demanda Máx (kW)", f"{demanda_max:.2f}")
@@ -173,6 +178,7 @@ else:
 # =========================================================
 # GRÁFICO – PERFIL DE POTÊNCIA
 # =========================================================
+st.divider()
 st.subheader("📈 Perfil de Potência Ativa")
 
 fig1, ax1 = plt.subplots(figsize=(12,4))
@@ -186,6 +192,7 @@ st.pyplot(fig1)
 # =========================================================
 # DEMANDA MÉDIA DIÁRIA
 # =========================================================
+st.divider()
 st.subheader("📊 Demanda Média Diária")
 
 demanda_diaria = df["P_kW"].resample("D").mean()
@@ -201,7 +208,7 @@ st.pyplot(fig2)
 # =========================================================
 # FATOR DE POTÊNCIA
 # =========================================================
-
+st.divider()
 st.subheader("📈 Fator de Potência")
 
 fator_potencia = df["Fator de Potência"]
@@ -216,6 +223,7 @@ st.pyplot(fig3)
 # =========================================================
 # SIMULAÇÃO TARIFÁRIA – ENERGISA PB (A4)
 # =========================================================
+st.divider()
 st.subheader("💰 Simulação Tarifária")
 
 energia_ponta = df[df["Periodo"] == "Ponta"]["P_kW"].sum()
@@ -252,6 +260,7 @@ else:
 # =========================================================
 # TABELA E EXPORTAÇÃO
 # =========================================================
+st.divider()
 st.subheader("📋 Base de Dados Consolidada")
 
 st.dataframe(df, use_container_width=True)
@@ -262,3 +271,16 @@ st.download_button(
     file_name="base_consolidada.csv",
     mime="text/csv"
 )
+
+st.divider()
+st.subheader("📝 Conclusão Técnica")
+
+st.write(f"""
+Com base nos dados analisados no período selecionado, a instalação apresentou
+demanda máxima de **{demanda_max:.2f} kW**, com demanda média de **{demanda_media:.2f} kW**.
+
+A demanda contratável recomendada é de **{demanda_recomendada:.2f} kW**.
+O fator de potência médio foi de **{fp_medio:.3f}**, estando {"abaixo" if fp_medio < 0.92 else "dentro"} do limite regulatório.
+
+A modalidade tarifária mais vantajosa é **{'Horária Verde' if fatura_verde < fatura_azul else 'Horária Azul'}**.
+""")
