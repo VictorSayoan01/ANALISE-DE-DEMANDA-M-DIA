@@ -107,6 +107,20 @@ arquivo_fp = st.sidebar.file_uploader(
     type=["csv"]
 )
 
+bandeira_selecionada = st.selectbox(
+    "Bandeira Tarifária de Dezembro/2025",
+    ["Verde", "Amarela", "Vermelha Nível 1", "Vermelha Nível 2"]
+)
+
+if bandeira_selecionada == "Verde":
+    bandeira_valor = 0.0
+elif bandeira_selecionada == "Amarela":
+    bandeira_valor = 0.01885
+elif bandeira_selecionada == "Vermelha Nível 1":
+    bandeira_valor = 0.04400
+else:  # Vermelha Nível 2
+    bandeira_valor = 0.09100
+
 if arquivo_pot is None or arquivo_fp is None:
     st.info("⬅️ Faça upload dos dois arquivos para iniciar a análise.")
     st.stop()
@@ -232,15 +246,33 @@ energia_fora  = df[df["Periodo"] == "Fora de Ponta"]["P_kW"].sum()
 demanda_ponta = df[df["Periodo"] == "Ponta"]["P_kW"].max()
 demanda_fora  = df[df["Periodo"] == "Fora de Ponta"]["P_kW"].max()
 
-#Tarifa Grupo B
-tarifa_kWh = 0.85
-fatura_B = (energia_total * tarifa_kWh)
+# Valor do ICMS na Paraíba e Tarifa:
+icms_pb = 0.20  
+tarifa_B = 0.85
+
+#Tarifa Grupo B:
+custo_base = energia_total * tarifa_B
+custo_bandeira = energia_total * bandeira_valor
+subtotal_sem_icms = custo_base + custo_bandeira
+fatura_B_icms = subtotal_sem_icms * (1 + icms_pb)
+
+# Valores de Tarifas:
+# Verde:
+tar_demanda_verde = 24.72
+tar_e_ponta_verde = 1.60297
+tar_e_fora_verde = 0.28655
+
+# Azul:
+demanda_ponta_azul = 48.77
+demanda_fora_azul = 24.72 
+energia_ponta_azul = 0.42014 
+energia_fora_azul = 0.28655
 
 # Tarifa Verde
 fatura_verde = (
-    demanda_max * 24.72 +
-    energia_ponta * 1.60297 +
-    energia_fora  * 0.28655
+    demanda_max *  tar_demanda_verde +
+    energia_ponta *  tar_e_ponta_verde +
+    energia_fora  * tar_e_fora_verde
 )
 
 # Tarifa Azul
@@ -251,8 +283,35 @@ fatura_azul = (
     energia_fora  * 0.28655
 )
 
-dif_verde = fatura_verde - fatura_B
-dif_azul  = fatura_azul  - fatura_B
+# custo energia ponta/fora de ponta com bandeira
+energia_total_verde_com_bandeira = (
+    energia_ponta * (tar_e_ponta_verde + bandeira_valor) +
+    energia_fora * (tar_e_fora_verde + bandeira_valor)
+)
+
+energia_total_azul_com_bandeira = (
+    energia_ponta * (energia_ponta_azul + bandeira_valor) +
+    energia_fora * (energia_fora_azul + bandeira_valor)
+)
+
+# Parte de demanda não sofre bandeira, mas sofre ICMS direta
+custo_demanda_verde = demanda_max * tar_demanda_verde
+custo_demanda_azul = (
+    demanda_ponta * demanda_ponta_azul +
+    demanda_fora * demanda_fora_azul
+)
+
+# subtotal sem ICMS:
+subtotal_verde = custo_demanda_verde + energia_total_verde_com_bandeira
+subtotal_azul  = custo_demanda_azul + energia_total_azul_com_bandeira
+
+# aplicando ICMS:
+fatura_verde_icms = subtotal_verde * (1 + icms_pb)
+fatura_azul_icms  = subtotal_azul * (1 + icms_pb)
+
+
+dif_verde = fatura_verde - fatura_B_icms
+dif_azul  = fatura_azul  - fatura_B_icms
 
 colv, cola, colb, cole = st.columns(4)
 
@@ -268,12 +327,12 @@ cola.metric(
 
 colb.metric(
     "⚡ Tarifa Convencional – Grupo B (R$)",
-    f"{fatura_B:,.2f}"
+    f"{fatura_B_icms:,.2f}"
 )
 
 cole.metric(
     "💰 Diferença Verde × Grupo B (R$)",
-    f"{(fatura_verde - fatura_B):,.2f}"
+    f"{(fatura_verde - fatura_B_icms):,.2f}"
 )
 
 
