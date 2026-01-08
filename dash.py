@@ -251,17 +251,49 @@ fatura_azul = (
     energia_fora  * 0.28655
 )
 
+dif_verde = fatura_verde - fatura_B
+dif_azul  = fatura_azul  - fatura_B
+
 colv, cola, colb, cole = st.columns(4)
 
-colv.metric("💚 Tarifa Verde -Grupo A (R$)", f"{fatura_verde:,.2f}")
-cola.metric("💙 Tarifa Azul - Grupo A (R$)", f"{fatura_azul:,.2f}")
-colb.metric("Tarifa Convencional - Grupo B (R$)", f"{fatura_B}")
-cole.metricc("Economia - Grupo A x Grupo B (R$)", f"{fatura_verde - fatura_B}")
+colv.metric(
+    "💚 Tarifa Verde – Grupo A (R$)",
+    f"{fatura_verde:,.2f}"
+)
 
-if fatura_verde < fatura_azul:
-    st.success(f"Modalidade recomendada: **HORÁRIA VERDE** – Economia estimada de R$ {(fatura_azul - fatura_verde):,.2f}")
+cola.metric(
+    "💙 Tarifa Azul – Grupo A (R$)",
+    f"{fatura_azul:,.2f}"
+)
+
+colb.metric(
+    "⚡ Tarifa Convencional – Grupo B (R$)",
+    f"{fatura_B:,.2f}"
+)
+
+cole.metric(
+    "💰 Diferença Verde × Grupo B (R$)",
+    f"{(fatura_verde - fatura_B):,.2f}"
+)
+
+
+if dif_verde < 0 and dif_verde < dif_azul:
+    st.success(
+        f"📉 A migração para o **Grupo A – Horária Verde** "
+        f"pode gerar economia estimada de R$ {abs(dif_verde):,.2f} "
+        f"em relação ao Grupo B."
+    )
+elif dif_azul < 0:
+    st.success(
+        f"📉 A migração para o **Grupo A – Horária Azul** "
+        f"pode gerar economia estimada de R$ {abs(dif_azul):,.2f} "
+        f"em relação ao Grupo B."
+    )
 else:
-    st.success(f"Modalidade recomendada: **HORÁRIA AZUL** – Economia estimada de R$ {(fatura_verde - fatura_azul):,.2f}")
+    st.warning(
+        "📌 Com base no perfil atual de carga, a migração para o Grupo A "
+        "não apresenta vantagem econômica imediata."
+    )
 
 # =========================================================
 # TABELA E EXPORTAÇÃO
