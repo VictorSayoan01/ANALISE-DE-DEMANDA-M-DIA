@@ -199,6 +199,21 @@ ax2.grid(True)
 st.pyplot(fig2)
 
 # =========================================================
+# FATOR DE POTÊNCIA
+# =========================================================
+
+st.subheader("📈 Fator de Potência")
+
+fator_potencia = df["Fator de Potência"]
+
+fig3, ax3 = plt.subplots(figsize=(10,4))
+ax3.plot(fator_potencia.index, fator_potencia.values)
+ax3.set_xlabel("Data")
+ax3.set_ylabel("Fator de Potência")
+ax3.grid(True)
+
+st.pyplot(fig3)
+# =========================================================
 # SIMULAÇÃO TARIFÁRIA – ENERGISA PB (A4)
 # =========================================================
 st.subheader("💰 Simulação Tarifária")
