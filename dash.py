@@ -93,8 +93,19 @@ def carregar_dados(arquivo_pot, arquivo_fp):
 # =========================================================
 # CARREGAR DADOS
 # =========================================================
-arquivo_pot = r"D:\OneDrive\SAYOAN\PROJETOS - TAUREN ENERGIA\PROJETOS DE INSTALAÇÃO DE BAIXA TENSÃO\PROJETO 10 - NAVEGANTES\ANALISE DE DEMANDA MÉDIA\historico--17-12-2025.csv"
-arquivo_fp  = r"D:\OneDrive\SAYOAN\PROJETOS - TAUREN ENERGIA\PROJETOS DE INSTALAÇÃO DE BAIXA TENSÃO\PROJETO 10 - NAVEGANTES\ANALISE DE DEMANDA MÉDIA\historico--17-12-2025fp.csv"
+arquivo_pot = st.sidebar.file_uploader(
+    "Upload – Potência Ativa (CSV)",
+    type=["csv"]
+)
+
+arquivo_fp = st.sidebar.file_uploader(
+    "Upload – Fator de Potência (CSV)",
+    type=["csv"]
+)
+
+if arquivo_pot is None or arquivo_fp is None:
+    st.info("⬅️ Faça upload dos dois arquivos para iniciar a análise.")
+    st.stop()
 
 df = carregar_dados(arquivo_pot, arquivo_fp)
 
