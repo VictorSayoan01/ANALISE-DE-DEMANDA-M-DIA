@@ -296,9 +296,9 @@ else:
     )
 
 if fatura_verde < fatura_azul:
-    st.success(f"📉 A tarifa Verde é recomendada, gerando uma economia de {fatura_azul - fatura_verde}")
+    st.success(f"📉 A tarifa Verde é recomendada, gerando uma economia de {(fatura_azul - fatura_verde):,.2f}")
 else:
-    st.success(f"📉 A tarifa Verde é recomendada, gerando uma economia de {fatura_verde - fatura_azul}")
+    st.success(f"📉 A tarifa Verde é recomendada, gerando uma economia de {(fatura_verde - fatura_azul):,.2f}")
 
 # =========================================================
 # TABELA E EXPORTAÇÃO
