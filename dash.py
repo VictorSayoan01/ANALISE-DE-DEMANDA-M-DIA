@@ -13,29 +13,84 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-    /* Fundo principal */
+    /* =========================
+       FUNDO GERAL
+    ========================= */
     .stApp {
         background-color: white;
     }
 
-    /* Títulos */
+    /* =========================
+       TÍTULOS
+    ========================= */
     h1, h2, h3, h4, h5, h6 {
         color: #0B3C5D;
     }
 
-    /* Texto geral */
+    /* =========================
+       TEXTO GERAL
+    ========================= */
     p, span, label, div {
         color: #0B3C5D;
     }
 
-    /* Sidebar */
+    /* =========================
+       SIDEBAR
+    ========================= */
     section[data-testid="stSidebar"] {
         background-color: #f8f9fa;
     }
 
-    /* Métricas */
+    /* =========================
+       MÉTRICAS
+    ========================= */
     div[data-testid="stMetricValue"] {
         color: #0B3C5D;
+    }
+
+    /* =========================
+       BOTÕES (texto branco)
+    ========================= */
+    button[kind="primary"],
+    button[kind="secondary"] {
+        color: white !important;
+    }
+
+    button[kind="primary"] span,
+    button[kind="secondary"] span {
+        color: white !important;
+    }
+
+    /* =========================
+       SELECTBOX / DATE INPUT / FILE UPLOADER
+    ========================= */
+    div[data-baseweb="select"] span,
+    div[data-baseweb="select"] div {
+        color: white !important;
+    }
+
+    div[data-baseweb="input"] input {
+        color: white !important;
+    }
+
+    /* Placeholder */
+    input::placeholder {
+        color: #e0e0e0 !important;
+    }
+
+    /* =========================
+       CHECKBOX / RADIO
+    ========================= */
+    label[data-testid="stCheckbox"] span,
+    label[data-testid="stRadio"] span {
+        color: white !important;
+    }
+
+    /* =========================
+       FILE UPLOADER
+    ========================= */
+    div[data-testid="stFileUploader"] span {
+        color: white !important;
     }
 
     </style>
