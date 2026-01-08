@@ -107,7 +107,7 @@ arquivo_fp = st.sidebar.file_uploader(
     type=["csv"]
 )
 
-bandeira_selecionada = st.sidebar(
+bandeira_selecionada = st.selectbox(
     "Bandeira Tarifária de Dezembro/2025",
     ["Verde", "Amarela", "Vermelha Nível 1", "Vermelha Nível 2"]
 )
