@@ -295,6 +295,11 @@ else:
         "não apresenta vantagem econômica imediata."
     )
 
+if fatura_verde < fatura_azul:
+    st.success(f"📉 A tarifa Verde é recomendada, gerando uma economia de {fatura_azul - fatura_verde}")
+else:
+    st.success(f"📉 A tarifa Verde é recomendada, gerando uma economia de {fatura_verde - fatura_azul}")
+
 # =========================================================
 # TABELA E EXPORTAÇÃO
 # =========================================================
