@@ -341,9 +341,9 @@ else:
     )
 
 if fatura_verde_icms < fatura_azul_icms:
-    st.success(f"📉 A tarifa Verde é recomendada, gerando uma economia de R$ {(fatura_azul - fatura_verde):,.2f}")
+    st.success(f"📉 A tarifa Verde é recomendada, gerando uma economia de R$ {(fatura_azul_icms - fatura_verde_icms):,.2f}")
 else:
-    st.success(f"📉 A tarifa Verde é recomendada, gerando uma economia de R$ {(fatura_verde - fatura_azul):,.2f}")
+    st.success(f"📉 A tarifa Verde é recomendada, gerando uma economia de R$ {(fatura_verde_icms - fatura_azul_icms):,.2f}")
 
 # =========================================================
 # TABELA E EXPORTAÇÃO
