@@ -268,20 +268,6 @@ demanda_fora_azul = 24.72
 energia_ponta_azul = 0.42014 
 energia_fora_azul = 0.28655
 
-# Tarifa Verde
-fatura_verde = (
-    demanda_max *  tar_demanda_verde +
-    energia_ponta *  tar_e_ponta_verde +
-    energia_fora  * tar_e_fora_verde
-)
-
-# Tarifa Azul
-fatura_azul = (
-    demanda_ponta * 48.77 +
-    demanda_fora  * 24.72 +
-    energia_ponta * 0.42014 +
-    energia_fora  * 0.28655
-)
 
 # custo energia ponta/fora de ponta com bandeira
 energia_total_verde_com_bandeira = (
@@ -310,19 +296,19 @@ fatura_verde_icms = subtotal_verde * (1 + icms_pb)
 fatura_azul_icms  = subtotal_azul * (1 + icms_pb)
 
 
-dif_verde = fatura_verde - fatura_B_icms
-dif_azul  = fatura_azul  - fatura_B_icms
+dif_verde = fatura_verde_icms - fatura_B_icms
+dif_azul  = fatura_azul_icms  - fatura_B_icms
 
 colv, cola, colb, cole = st.columns(4)
 
 colv.metric(
     "💚 Tarifa Verde – Grupo A (R$)",
-    f"{fatura_verde:,.2f}"
+    f"{fatura_verde_icms:,.2f}"
 )
 
 cola.metric(
     "💙 Tarifa Azul – Grupo A (R$)",
-    f"{fatura_azul:,.2f}"
+    f"{fatura_azul_icms:,.2f}"
 )
 
 colb.metric(
@@ -332,7 +318,7 @@ colb.metric(
 
 cole.metric(
     "💰 Diferença Verde × Grupo B (R$)",
-    f"{(fatura_verde - fatura_B_icms):,.2f}"
+    f"{(fatura_verde_icms - fatura_B_icms):,.2f}"
 )
 
 
