@@ -340,7 +340,7 @@ else:
         "não apresenta vantagem econômica imediata."
     )
 
-if fatura_verde < fatura_azul:
+if fatura_verde_icms < fatura_azul_icms:
     st.success(f"📉 A tarifa Verde é recomendada, gerando uma economia de R$ {(fatura_azul - fatura_verde):,.2f}")
 else:
     st.success(f"📉 A tarifa Verde é recomendada, gerando uma economia de R$ {(fatura_verde - fatura_azul):,.2f}")
@@ -370,5 +370,5 @@ demanda máxima de **{demanda_max:.2f} kW**, com demanda média de **{demanda_me
 A demanda contratável recomendada é de **{demanda_recomendada:.2f} kW**.
 O fator de potência médio foi de **{fp_medio:.3f}**, estando {"abaixo" if fp_medio < 0.92 else "dentro"} do limite regulatório.
 
-A modalidade tarifária mais vantajosa é **{'Horária Verde' if fatura_verde < fatura_azul else 'Horária Azul'}**.
+A modalidade tarifária mais vantajosa é **{'Horária Verde' if fatura_verde_icms < fatura_azul_icms else 'Horária Azul'}**.
 """)
