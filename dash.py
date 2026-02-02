@@ -1,6 +1,14 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
+import reportlab
+
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+from reportlab.lib.units import cm
+import tempfile
+
+
 
 # =========================================================
 # CONFIGURAÇÃO DA PÁGINA
@@ -149,6 +157,66 @@ def carregar_dados(arquivo_pot, arquivo_fp):
 
     return df
 
+def gerar_pdf(df, demanda_max, demanda_max_ponta, demanda_max_fora,
+              energia_total, fatura_verde, fatura_azul):
+
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+
+    c = canvas.Canvas(temp_file.name, pagesize=A4)
+    largura, altura = A4
+
+    y = altura - 2*cm
+
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(2*cm, y, "LAUDO TÉCNICO – ANÁLISE DE DEMANDA ELÉTRICA")
+    y -= 1.2*cm
+
+    c.setFont("Helvetica", 10)
+    c.drawString(2*cm, y, "Cliente: _______________________________")
+    y -= 0.8*cm
+
+    c.drawString(2*cm, y, "Concessionária: Energisa Paraíba")
+    y -= 1.2*cm
+
+    c.setFont("Helvetica-Bold", 11)
+    c.drawString(2*cm, y, "Indicadores Elétricos")
+    y -= 0.8*cm
+
+    c.setFont("Helvetica", 10)
+    c.drawString(2*cm, y, f"Demanda máxima registrada: {demanda_max:.2f} kW")
+    y -= 0.6*cm
+
+    c.drawString(2*cm, y, f"Demanda máxima na ponta: {demanda_max_ponta:.2f} kW")
+    y -= 0.6*cm
+
+    c.drawString(2*cm, y, f"Demanda máxima fora de ponta: {demanda_max_fora:.2f} kW")
+    y -= 0.6*cm
+
+    c.drawString(2*cm, y, f"Energia total consumida: {energia_total:,.2f} kWh")
+    y -= 1.0*cm
+
+    c.setFont("Helvetica-Bold", 11)
+    c.drawString(2*cm, y, "Simulação Tarifária")
+    y -= 0.8*cm
+
+    c.setFont("Helvetica", 10)
+    c.drawString(2*cm, y, f"Tarifa Horária Verde: R$ {fatura_verde:,.2f}")
+    y -= 0.6*cm
+
+    c.drawString(2*cm, y, f"Tarifa Horária Azul: R$ {fatura_azul:,.2f}")
+    y -= 1.2*cm
+
+    if fatura_verde < fatura_azul:
+        c.drawString(2*cm, y, "Modalidade recomendada: TARIFA HORÁRIA VERDE")
+    else:
+        c.drawString(2*cm, y, "Modalidade recomendada: TARIFA HORÁRIA AZUL")
+
+    c.showPage()
+    c.save()
+
+    return temp_file.name
+
+
 # =========================================================
 # CARREGAR DADOS
 # =========================================================
@@ -226,17 +294,22 @@ demanda_media = df["P_kW"].mean()
 energia_total = df["P_kW"].sum()
 fp_medio = df["Fator de Potência"].mean()
 demanda_recomendada = demanda_max * 1.10
+demanda_max_ponta = df.loc[df["Periodo"] == "Ponta", "P_kW"].max()
+demanda_max_fora = df.loc[df["Periodo"] == "Fora de Ponta", "P_kW"].max()
+
 # =========================================================
 # KPIs
 # =========================================================
 st.divider()
-col1, col2, col3, col4, col5 = st.columns(5)
+col1, col2, col3, col4, col5, col6, col7 = st.columns(7)
 
 col1.metric("⚡ Demanda Máx (kW)", f"{demanda_max:.2f}")
 col2.metric("📈 Demanda Média (kW)", f"{demanda_media:.2f}")
 col3.metric("🔋 Energia Total (kWh)", f"{energia_total:,.0f}")
 col4.metric("🔌 FP Médio", f"{fp_medio:.3f}")
 col5.metric("📊 Demanda Recomendada (kW)", f"{demanda_recomendada:.2f}")
+col6.metric("📊 Demanda Máxima Fora Ponta (kW)", f"{demanda_max_fora:.2f}")
+col7.metric("📊 Demanda Máxima na Ponta", f"{demanda_max_ponta:.2f}")
 
 # ALERTA FP
 if fp_medio < 0.92:
@@ -427,3 +500,23 @@ O fator de potência médio foi de **{fp_medio:.3f}**, estando {"abaixo" if fp_m
 
 A modalidade tarifária mais vantajosa é **{'Horária Verde' if fatura_verde_icms < fatura_azul_icms else 'Horária Azul'}**.
 """)
+
+if st.button("📄 Gerar Laudo Técnico em PDF"):
+    caminho_pdf = gerar_pdf(
+        df,
+        demanda_max,
+        demanda_max_ponta,
+        demanda_max_fora,
+        energia_total,
+        fatura_verde_icms,
+        fatura_azul_icms
+    )
+
+    with open(caminho_pdf, "rb") as f:
+        st.download_button(
+            label="📥 Baixar PDF",
+            data=f,
+            file_name="Laudo_Analise_Demanda.pdf",
+            mime="application/pdf"
+        )
+
