@@ -294,8 +294,10 @@ demanda_media = df["P_kW"].mean()
 energia_total = df["P_kW"].sum()
 fp_medio = df["Fator de Potência"].mean()
 demanda_recomendada = demanda_max * 1.10
-demanda_max_ponta = df.loc[df["Periodo"] == "Ponta", "P_kW"].max()
-demanda_max_fora = df.loc[df["Periodo"] == "Fora de Ponta", "P_kW"].max()
+#demanda_max_ponta = df.loc[df["Periodo"] == "Ponta", "P_kW"].max()
+demanda_max_ponta=150
+#demanda_max_fora = df.loc[df["Periodo"] == "Fora de Ponta", "P_kW"].max()
+demanda_max_fora=140
 
 # =========================================================
 # KPIs
