@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-import reportlab
 import sqlite3
 import tempfile
 
@@ -10,6 +9,7 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.units import cm
 import tempfile
 
+from sklearn.linear_model import LinearRegression
 
 
 # =========================================================
@@ -212,7 +212,7 @@ df = carregar_dados_db()
 # FILTRO DE BANDEIRA TARIFÁRIA
 # =========================================================
 bandeira_selecionada = st.selectbox(
-    "Bandeira Tarifária de Dezembro/2025",
+    "Bandeira Tarifária de Janeiro/2025",
     ["Verde", "Amarela", "Vermelha Nível 1", "Vermelha Nível 2"]
 )
 
@@ -448,6 +448,99 @@ if fatura_verde_icms < fatura_azul_icms:
     st.success(f"📉 A tarifa Verde é recomendada, gerando uma economia de R$ {(fatura_azul_icms - fatura_verde_icms):,.2f}")
 else:
     st.success(f"📉 A tarifa Azul é recomendada, gerando uma economia de R$ {(fatura_verde_icms - fatura_azul_icms):,.2f}")
+
+# =========================================================
+# PROJEÇÃO - MACHINE LEARNING
+# =========================================================
+
+df_ml = df.copy()
+
+df_ml["hora"] = df_ml.index.hour
+df_ml["dia_semana"] = df_ml.index.weekday
+df_ml["is_ponta"] = (df_ml["Periodo"] == "Ponta").astype(int)
+
+# Treino do modelo:
+X = df_ml[["hora", "dia_semana", "is_ponta"]]
+y = df_ml["P_kW"]
+
+modelo = LinearRegression()
+modelo.fit(X, y)
+
+# Criação do Calendário de Março:
+marco = pd.date_range(
+    start="2026-03-01 00:00:00",
+    end="2026-03-31 23:00:00",
+    freq="H"
+)
+
+df_marco = pd.DataFrame(index=marco)
+df_marco["hora"] = df_marco.index.hour
+df_marco["dia_semana"] = df_marco.index.weekday
+
+df_marco["is_ponta"] = (
+    (df_marco["hora"] >= 18) &
+    (df_marco["hora"] < 21) &
+    (df_marco["dia_semana"] < 5)
+).astype(int)
+
+# Previsão de Energia:
+df_marco["P_prevista"] = modelo.predict(
+    df_marco[["hora", "dia_semana", "is_ponta"]]
+)
+
+energia_ponta_prev = df_marco[df_marco["is_ponta"] == 1]["P_prevista"].sum()
+energia_fora_prev  = df_marco[df_marco["is_ponta"] == 0]["P_prevista"].sum()
+
+# Custo da Demanda:
+dem_contratada_ponta = 150
+dem_contratada_fora_ponta = 140
+
+custo_demanda = (
+    dem_contratada_ponta * demanda_ponta_azul +
+    dem_contratada_fora_ponta  * demanda_fora_azul
+)
+
+# Custo da Energia:
+custo_energia = (
+    energia_ponta_prev * (energia_ponta_azul + bandeira_valor) +
+    energia_fora_prev  * (energia_fora_azul  + bandeira_valor)
+)
+
+# Penalidade por ultrapassagem:
+dem_prev_ponta = df_marco[df_marco["is_ponta"] == 1]["P_prevista"].max()
+dem_prev_fora  = df_marco[df_marco["is_ponta"] == 0]["P_prevista"].max()
+
+ultrap_ponta = max(0, dem_prev_ponta - dem_contratada_ponta)
+ultrap_fora  = max(0, dem_prev_fora  - dem_contratada_fora_ponta)
+
+penalidade = (
+    ultrap_ponta * demanda_ponta_azul * 2 +
+    ultrap_fora  * demanda_fora_azul  * 2
+)
+
+# Previsão de Fatura do mês de MArço:
+subtotal_marco = custo_demanda + custo_energia + penalidade
+fatura_prevista_marco = subtotal_marco * (1 + icms_pb)
+
+st.divider()
+st.subheader("💰 Projeção de Fatura – Março (Grupo A | Horária Azul)")
+
+col1, col2, col3 = st.columns(3)
+
+col1.metric(
+    "🔵 Energia Prevista – Março (kWh)",
+    f"{energia_ponta_prev + energia_fora_prev:,.0f}"
+)
+
+col2.metric(
+    "⚡ Penalidade por Ultrapassagem (R$)",
+    f"{penalidade:,.2f}"
+)
+
+col3.metric(
+    "💵 Fatura Prevista – Março (R$)",
+    f"{fatura_prevista_marco:,.2f}"
+)
 
 # =========================================================
 # TABELA E EXPORTAÇÃO
