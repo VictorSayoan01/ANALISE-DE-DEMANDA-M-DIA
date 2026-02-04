@@ -12,7 +12,6 @@ import tempfile
 
 from sklearn.linear_model import LinearRegression
 
-
 # =========================================================
 # CONFIGURAÇÃO DA PÁGINA
 # =========================================================
