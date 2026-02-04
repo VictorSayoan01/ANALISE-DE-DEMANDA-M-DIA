@@ -489,8 +489,10 @@ df_marco["P_prevista"] = modelo.predict(
     df_marco[["hora", "dia_semana", "is_ponta"]]
 )
 
-energia_ponta_prev = df_marco[df_marco["is_ponta"] == 1]["P_prevista"].sum()
-energia_fora_prev  = df_marco[df_marco["is_ponta"] == 0]["P_prevista"].sum()
+fator_crescimento = 1.10  # +10%
+
+energia_ponta_prev = df_marco[df_marco["is_ponta"] == 1]["P_prevista"].sum() * fator_crescimento
+energia_fora_prev  = df_marco[df_marco["is_ponta"] == 0]["P_prevista"].sum() * fator_crescimento
 
 # Custo da Demanda:
 dem_contratada_ponta = 150
