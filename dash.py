@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import reportlab
+import sqlite3
+import tempfile
 
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
@@ -116,44 +118,29 @@ with col_title:
     st.caption("Energisa-PB • Engenharia Elétrica • Análise Técnica")
 
 # =========================================================
-# FUNÇÃO DE LEITURA E TRATAMENTO
+# CONEXÃO COM BANCO SQLITE
 # =========================================================
 @st.cache_data
-def carregar_dados(arquivo_pot, arquivo_fp):
+def carregar_dados_db():
+    conn = sqlite3.connect("dados.db")
 
-    # ---------- POTÊNCIA ATIVA ----------
-    df_pot = pd.read_csv(arquivo_pot, sep=",", decimal=".")
-    df_pot = df_pot.drop(columns=["Nome"], errors="ignore")
-
-    df_pot["Data"] = pd.to_datetime(
-        df_pot["Data"],
-        format="%d/%m/%Y, %H:%M:%S",
-        errors="coerce"
+    df_pot = pd.read_sql(
+        "SELECT Data, potencia_kw FROM potencia_ativa",
+        conn,
+        parse_dates=["Data"]
     )
 
-    df_pot = df_pot.dropna(subset=["Data"])
-    df_pot["P_kW"] = df_pot["Potência Ativa"] / 1000
-    df_pot = df_pot.drop(columns=["Potência Ativa"])
-
-    df_pot = df_pot.set_index("Data").sort_index()
-    df_pot = df_pot[~df_pot.index.duplicated(keep="first")]
-
-    # ---------- FATOR DE POTÊNCIA ----------
-    df_fp = pd.read_csv(arquivo_fp, sep=",", decimal=".")
-    df_fp = df_fp.drop(columns=["Nome"], errors="ignore")
-
-    df_fp["Data"] = pd.to_datetime(
-        df_fp["Data"],
-        format="%d/%m/%Y, %H:%M:%S",
-        errors="coerce"
+    df_fp = pd.read_sql(
+        "SELECT Data, fp FROM fator_potencia",
+        conn,
+        parse_dates=["Data"]
     )
 
-    df_fp = df_fp.dropna(subset=["Data"])
-    df_fp = df_fp.set_index("Data").sort_index()
-    df_fp = df_fp[~df_fp.index.duplicated(keep="first")]
+    conn.close()
 
-    # ---------- JOIN TEMPORAL ----------
-    df = df_pot.join(df_fp, how="inner")
+    df = pd.merge(df_pot, df_fp, on="Data", how="inner")
+    df = df.rename(columns={"potencia_kw":"P_kW", "fp":"Fator de Potência"})
+    df = df.set_index("Data").sort_index()
 
     return df
 
@@ -216,20 +203,14 @@ def gerar_pdf(df, demanda_max, demanda_max_ponta, demanda_max_fora,
 
     return temp_file.name
 
+# =========================================================
+# INICIALIZAR E CARREGAR DADOS
+# =========================================================
+df = carregar_dados_db()
 
 # =========================================================
-# CARREGAR DADOS
+# FILTRO DE BANDEIRA TARIFÁRIA
 # =========================================================
-arquivo_pot = st.sidebar.file_uploader(
-    "Upload – Potência Ativa (CSV)",
-    type=["csv"]
-)
-
-arquivo_fp = st.sidebar.file_uploader(
-    "Upload – Fator de Potência (CSV)",
-    type=["csv"]
-)
-
 bandeira_selecionada = st.selectbox(
     "Bandeira Tarifária de Dezembro/2025",
     ["Verde", "Amarela", "Vermelha Nível 1", "Vermelha Nível 2"]
@@ -243,12 +224,6 @@ elif bandeira_selecionada == "Vermelha Nível 1":
     bandeira_valor = 0.04400
 else:  # Vermelha Nível 2
     bandeira_valor = 0.09100
-
-if arquivo_pot is None or arquivo_fp is None:
-    st.info("⬅️ Faça upload dos dois arquivos para iniciar a análise.")
-    st.stop()
-
-df = carregar_dados(arquivo_pot, arquivo_fp)
 
 # =========================================================
 # FILTRO DE PERÍODO
@@ -294,10 +269,8 @@ demanda_media = df["P_kW"].mean()
 energia_total = df["P_kW"].sum()
 fp_medio = df["Fator de Potência"].mean()
 demanda_recomendada = demanda_max * 1.10
-#demanda_max_ponta = df.loc[df["Periodo"] == "Ponta", "P_kW"].max()
-demanda_max_ponta=150
-#demanda_max_fora = df.loc[df["Periodo"] == "Fora de Ponta", "P_kW"].max()
-demanda_max_fora=140
+demanda_max_ponta = df.loc[df["Periodo"] == "Ponta", "P_kW"].max()
+demanda_max_fora = df.loc[df["Periodo"] == "Fora de Ponta", "P_kW"].max()
 
 # =========================================================
 # KPIs
@@ -364,6 +337,7 @@ ax3.set_ylabel("Fator de Potência")
 ax3.grid(True)
 
 st.pyplot(fig3)
+
 # =========================================================
 # SIMULAÇÃO TARIFÁRIA – ENERGISA PB (A4)
 # =========================================================
